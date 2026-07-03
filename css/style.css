@@ -352,7 +352,16 @@ body {
 .overlay-inner .big { font-size: 2.4rem; color: var(--accent); display: block; margin-bottom: 8px; }
 
 /* --- powers --- */
-.powers-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.powers-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.power-btn[aria-pressed="true"] {
+  background: var(--teal) !important;
+  color: #fff !important;
+  border-color: var(--teal) !important;
+}
+.power-btn[aria-pressed="true"] .p-cost {
+  background: #fff !important;
+  color: var(--teal) !important;
+}
 .power-btn {
   position: relative;
   border: 2px solid var(--ink); border-radius: 12px;

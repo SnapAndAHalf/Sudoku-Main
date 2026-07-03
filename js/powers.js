@@ -45,8 +45,11 @@ const POWERS = [
   },
 ];
 
-/* Deterministic pick of 3 powers for a game seed (so co-op players share the same set). */
+/* Fixed set of 3 powers for the game (Reveal, Shield, Beacon). */
 function drawPowers(seedStr) {
-  const rng = RNG.fromSeed('powers:' + seedStr);
-  return rng.shuffle(POWERS).slice(0, 3);
+  return [
+    POWERS.find(p => p.id === 'oracle'),
+    POWERS.find(p => p.id === 'shield'),
+    POWERS.find(p => p.id === 'beacon'),
+  ];
 }

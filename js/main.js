@@ -278,8 +278,6 @@ const Main = (() => {
       } else backToMenu();
     });
     $('btn-pause').addEventListener('click', () => Game.setPaused(!Game.state.paused));
-    $('btn-pen').addEventListener('click', Game.togglePen);
-    $('btn-erase').addEventListener('click', Game.toggleErase);
 
     // sound toggles
     const st = $('toggle-sound'), mt = $('toggle-music');

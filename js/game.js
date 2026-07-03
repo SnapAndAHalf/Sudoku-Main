@@ -40,7 +40,7 @@ const Game = (() => {
       mode, difficulty, seed, daily: daily || mode === 'daily',
       hearts: MAX_HEARTS, score: 0, combo: 0,
       activeDigit: 0, selectedCell: -1,
-      penMode: false, eraseMode: false,
+      penMode: false,
       timer: 0, frozen: 0, paused: false, over: false, shield: false,
       powers: drawPowers(seed), powersUsed: {},
       doneRows: new Set(), doneCols: new Set(), doneBoxes: new Set(), doneDigits: new Set(),
@@ -61,7 +61,7 @@ const Game = (() => {
       mode: 'multi', difficulty: st.difficulty, seed: st.seed, daily: !!st.daily,
       hearts: st.hearts, score: st.score, combo: 0,
       activeDigit: 0, selectedCell: -1,
-      penMode: false, eraseMode: false,
+      penMode: false,
       timer: st.timer, frozen: 0, paused: false, over: false, shield: st.shield,
       powers: drawPowers(st.seed), powersUsed: st.powersUsed || {},
       doneRows: new Set(), doneCols: new Set(), doneBoxes: new Set(), doneDigits: new Set(),
@@ -214,6 +214,17 @@ const Game = (() => {
   function buildPowers() {
     const row = $('powers-row');
     row.innerHTML = '';
+
+    // Prepend Pen button dynamically
+    const penBtn = document.createElement('button');
+    penBtn.className = 'power-btn';
+    penBtn.id = 'btn-pen';
+    penBtn.dataset.desc = 'Toggle pencil notes mode to write candidate numbers in cells (Hotkey: N)';
+    penBtn.setAttribute('aria-pressed', S.penMode ? 'true' : 'false');
+    penBtn.innerHTML = `<span class="p-ico">✎</span><span class="p-name">Pen</span><span class="p-cost" style="visibility:hidden">★ 0</span>`;
+    penBtn.addEventListener('click', togglePen);
+    row.appendChild(penBtn);
+
     for (const p of S.powers) {
       const btn = document.createElement('button');
       btn.className = 'power-btn';
@@ -228,6 +239,7 @@ const Game = (() => {
 
   function refreshPowers() {
     for (const btn of $('powers-row').children) {
+      if (btn.id === 'btn-pen') continue; // skip Pen button
       const p = S.powers.find(x => x.id === btn.dataset.pid);
       const affordable = S.score >= p.cost;
       let blocked = false;
@@ -299,11 +311,6 @@ const Game = (() => {
     GameAudio.unlock();
     const cellFilled = S.board[i] !== 0;
 
-    if (S.eraseMode) {
-      if (!S.given[i]) eraseCell(i, true);
-      return;
-    }
-
     if (cellFilled) {
       // select the cell + adopt its digit for highlighting
       S.selectedCell = i;
@@ -329,8 +336,6 @@ const Game = (() => {
   function onNumTap(n) {
     if (S.paused || S.over) return;
     GameAudio.unlock();
-    S.eraseMode = false;
-    $('btn-erase').setAttribute('aria-pressed', 'false');
     // if a digit is already active and an empty cell is selected → place there
     if (S.selectedCell >= 0 && S.board[S.selectedCell] === 0) {
       setActiveDigit(n, false);
@@ -353,17 +358,9 @@ const Game = (() => {
 
   function togglePen() {
     S.penMode = !S.penMode;
-    S.eraseMode = false;
-    $('btn-pen').setAttribute('aria-pressed', String(S.penMode));
-    $('btn-erase').setAttribute('aria-pressed', 'false');
+    const btn = $('btn-pen');
+    if (btn) btn.setAttribute('aria-pressed', String(S.penMode));
     $('numpad').classList.toggle('pen-mode', S.penMode);
-    GameAudio.play('click');
-  }
-
-  function toggleErase() {
-    S.eraseMode = !S.eraseMode;
-    if (S.eraseMode) { S.penMode = false; $('btn-pen').setAttribute('aria-pressed', 'false'); $('numpad').classList.remove('pen-mode'); }
-    $('btn-erase').setAttribute('aria-pressed', String(S.eraseMode));
     GameAudio.play('click');
   }
 
@@ -685,7 +682,6 @@ const Game = (() => {
     if (S.over) return;
     if (e.key >= '1' && e.key <= '9') onNumTap(+e.key);
     else if (e.key === 'n' || e.key === 'N') togglePen();
-    else if (e.key === 'e' || e.key === 'E') toggleErase();
     else if (e.key === 'Escape') { setActiveDigit(0, true); refreshCells(); }
     else if (e.key === 'p' || e.key === 'P') setPaused(!S.paused);
     else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -697,14 +693,12 @@ const Game = (() => {
       if (e.key === 'ArrowRight' && i % 9 < 8) i += 1;
       S.selectedCell = i;
       refreshCells();
-    } else if (e.key === 'Backspace' || e.key === 'Delete') {
-      if (S.selectedCell >= 0 && !S.given[S.selectedCell]) eraseCell(S.selectedCell, true);
     }
   });
 
   return {
     newGame, loadState, snapshot, applyRemote,
-    setPaused, togglePen, toggleErase, usePower,
+    setPaused, togglePen, usePower,
     stopTimer,
     get state() { return S; },
     set onEvent(fn) { S.onEvent = fn; },
