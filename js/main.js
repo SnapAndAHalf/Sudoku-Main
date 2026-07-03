@@ -61,23 +61,27 @@ const Main = (() => {
 
   /* ---------- game starters ---------- */
   function startSingle(difficulty) {
-    GameAudio.unlock();
-    GameAudio.play('click');
-    closeModal();
-    Multi.leave();
-    show('screen-game');
-    Game.newGame({ seed: 'sp:' + Date.now() + ':' + Math.random(), difficulty, mode: 'single' });
+    checkOnboarding(() => {
+      GameAudio.unlock();
+      GameAudio.play('click');
+      closeModal();
+      Multi.leave();
+      show('screen-game');
+      Game.newGame({ seed: 'sp:' + Date.now() + ':' + Math.random(), difficulty, mode: 'single' });
+    });
   }
 
   function startDaily() {
-    GameAudio.unlock();
-    GameAudio.play('click');
-    closeModal();
-    Multi.leave();
-    const key = Daily.todayKey();
-    show('screen-game');
-    Game.newGame({ seed: Daily.seedFor(key), difficulty: Daily.difficultyFor(key), mode: 'daily' });
-    if (Daily.isDoneToday()) FX.toast('Already completed today — playing for fun!');
+    checkOnboarding(() => {
+      GameAudio.unlock();
+      GameAudio.play('click');
+      closeModal();
+      Multi.leave();
+      const key = Daily.todayKey();
+      show('screen-game');
+      Game.newGame({ seed: Daily.seedFor(key), difficulty: Daily.difficultyFor(key), mode: 'daily' });
+      if (Daily.isDoneToday()) FX.toast('Already completed today — playing for fun!');
+    });
   }
 
   /* ---------- multiplayer ---------- */
@@ -156,12 +160,14 @@ const Main = (() => {
 
   /* Called by Multi when host state arrives. */
   function enterMultiplayerGame(loadFn) {
-    closeModal();
-    show('screen-game');
-    loadFn();
-    Multi.updatePresence();
-    FX.toast('🤝 Solving together — good luck!');
-    GameAudio.play('join');
+    checkOnboarding(() => {
+      closeModal();
+      show('screen-game');
+      loadFn();
+      Multi.updatePresence();
+      FX.toast('🤝 Solving together — good luck!');
+      GameAudio.play('join');
+    });
   }
 
   /* ---------- end screens ---------- */
@@ -240,6 +246,146 @@ const Main = (() => {
       <div class="modal-actions"><button class="btn btn-primary" onclick="Main.closeModal()">Got it!</button></div>`);
   }
 
+  /* ---------- settings modal ---------- */
+  function showSettingsModal() {
+    GameAudio.play('click');
+    const currentStyle = localStorage.getItem('sudoku.playStyle') || 'cell-first';
+    const soundOn = GameAudio.sfxOn;
+    const musicOn = GameAudio.musicOn;
+
+    openModal(`
+      <h2>Settings ⚙️</h2>
+      <div class="settings-section">
+        <div class="settings-section-title">Sound &amp; Music</div>
+        <div class="settings-row">
+          <label class="settings-option">
+            <input type="checkbox" id="settings-sound" ${soundOn ? 'checked' : ''}>
+            <span>Sound Effects</span>
+          </label>
+          <label class="settings-option">
+            <input type="checkbox" id="settings-music" ${musicOn ? 'checked' : ''}>
+            <span>Music</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Play Style (Controls)</div>
+        <div class="settings-row">
+          <label class="settings-option">
+            <input type="radio" name="playstyle" value="cell-first" ${currentStyle === 'cell-first' ? 'checked' : ''}>
+            <span>Cell First (Classic)</span>
+          </label>
+          <label class="settings-option">
+            <input type="radio" name="playstyle" value="number-first" ${currentStyle === 'number-first' ? 'checked' : ''}>
+            <span>Number First (Mobile Style)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="btn-settings-save" style="width:100%">Save &amp; Close</button>
+      </div>
+    `);
+
+    $('btn-settings-save').addEventListener('click', () => {
+      GameAudio.play('click');
+      const soundChecked = $('settings-sound').checked;
+      const musicChecked = $('settings-music').checked;
+
+      if (GameAudio.sfxOn !== soundChecked) {
+        GameAudio.toggleSfx();
+        const st = $('toggle-sound');
+        if (st) st.classList.toggle('off', !soundChecked);
+      }
+      if (GameAudio.musicOn !== musicChecked) {
+        GameAudio.toggleMusic();
+        const mt = $('toggle-music');
+        if (mt) mt.classList.toggle('off', !musicChecked);
+      }
+
+      const selectedStyle = document.querySelector('input[name="playstyle"]:checked').value;
+      const previousStyle = localStorage.getItem('sudoku.playStyle') || 'cell-first';
+      if (previousStyle !== selectedStyle) {
+        localStorage.setItem('sudoku.playStyle', selectedStyle);
+        if (typeof Game !== 'undefined' && Game.state) {
+          Game.state.selectedCell = -1;
+          Game.state.activeDigit = 0;
+          try {
+            if (typeof Game.togglePen === 'function') {
+              Game.togglePen(); // toggle twice to refresh interface highlights instantly
+              Game.togglePen();
+            }
+          } catch (_) {}
+        }
+      }
+      closeModal();
+    });
+  }
+
+  /* ---------- onboarding flow (FTUE) ---------- */
+  function checkOnboarding(callback) {
+    if (localStorage.getItem('sudoku.playStyle')) {
+      callback();
+      return;
+    }
+
+    openModal(`
+      <h2>Choose Your Play Style</h2>
+      <p class="onboard-card-desc" style="font-size:0.82rem; max-width:440px; margin:0 auto 12px; line-height:1.4">
+        Sudoku can be played in two different ways. Choose the control style that feels most natural to you. You can always change this later in Settings.
+      </p>
+
+      <div class="onboard-cards">
+        <div class="onboard-card selected" id="card-cell-first" data-val="cell-first">
+          <div class="onboard-card-title">Cell First</div>
+          <div class="onboard-card-desc">Select a cell, then choose a number to place it.</div>
+          <div class="onboard-card-illustration">
+            <span>Tap Cell</span>
+            <span class="arr">↓</span>
+            <span>Tap Number</span>
+            <span class="arr">↓</span>
+            <span>Number Placed</span>
+          </div>
+        </div>
+
+        <div class="onboard-card" id="card-number-first" data-val="number-first">
+          <div class="onboard-card-title">Number First</div>
+          <div class="onboard-card-desc">Select a number first, then tap cells to place it.</div>
+          <div class="onboard-card-illustration">
+            <span>Tap Number</span>
+            <span class="arr">↓</span>
+            <span>Tap Cell</span>
+            <span class="arr">↓</span>
+            <span>Number Placed</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="btn-onboard-continue" style="width:100%; max-width:240px;">Continue</button>
+      </div>
+    `, { persistent: true });
+
+    let selectedStyle = 'cell-first';
+    const selectCard = (val) => {
+      selectedStyle = val;
+      $('card-cell-first').classList.toggle('selected', val === 'cell-first');
+      $('card-number-first').classList.toggle('selected', val === 'number-first');
+      GameAudio.play('click');
+    };
+
+    $('card-cell-first').addEventListener('click', () => selectCard('cell-first'));
+    $('card-number-first').addEventListener('click', () => selectCard('number-first'));
+
+    $('btn-onboard-continue').addEventListener('click', () => {
+      GameAudio.play('click');
+      localStorage.setItem('sudoku.playStyle', selectedStyle);
+      closeModal();
+      callback();
+    });
+  }
+
   /* ---------- wiring ---------- */
   function init() {
     $('btn-daily').addEventListener('click', startDaily);
@@ -247,6 +393,8 @@ const Main = (() => {
       b.addEventListener('click', () => startSingle(b.dataset.diff)));
     $('btn-create-room').addEventListener('click', createRoom);
     $('btn-join-room').addEventListener('click', () => joinRoomPrompt());
+    $('btn-settings').addEventListener('click', showSettingsModal);
+    $('btn-game-settings').addEventListener('click', showSettingsModal);
     $('btn-how').addEventListener('click', showHow);
 
     // lobby controls

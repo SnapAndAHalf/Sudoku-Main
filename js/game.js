@@ -162,15 +162,38 @@ const Game = (() => {
   function refreshHighlights() {
     const cells = boardEl().children;
     const sel = S.selectedCell;
+    const style = localStorage.getItem('sudoku.playStyle') || 'cell-first';
+
     for (let i = 0; i < 81; i++) {
       const el = cells[i];
       el.classList.remove('selected', 'same-num', 'peer');
-      if (sel >= 0) {
-        if (i === sel) el.classList.add('selected');
-        else if (Sudoku.rowOf(i) === Sudoku.rowOf(sel) || Sudoku.colOf(i) === Sudoku.colOf(sel) || Sudoku.boxOf(i) === Sudoku.boxOf(sel))
-          el.classList.add('peer');
+      if (style === 'cell-first') {
+        if (sel >= 0) {
+          if (i === sel) el.classList.add('selected');
+          else if (Sudoku.rowOf(i) === Sudoku.rowOf(sel) || Sudoku.colOf(i) === Sudoku.colOf(sel) || Sudoku.boxOf(i) === Sudoku.boxOf(sel))
+            el.classList.add('peer');
+        }
       }
-      if (S.activeDigit && S.board[i] === S.activeDigit) el.classList.add('same-num');
+
+      let highlightNum = 0;
+      if (style === 'cell-first') {
+        if (sel >= 0 && S.board[sel] > 0) highlightNum = S.board[sel];
+      } else {
+        highlightNum = S.activeDigit;
+      }
+
+      if (highlightNum && S.board[i] === highlightNum) el.classList.add('same-num');
+    }
+
+    // Toggle number-first active classes on the board
+    const board = boardEl();
+    if (board) {
+      if (style === 'number-first' && S.activeDigit > 0) {
+        board.classList.add('num-first-active');
+        board.style.setProperty('--hover-digit', `"${S.activeDigit}"`);
+      } else {
+        board.classList.remove('num-first-active');
+      }
     }
   }
 
@@ -199,6 +222,8 @@ const Game = (() => {
   function refreshNumpad() {
     const left = countsLeft();
     const pad = $('numpad');
+    const style = localStorage.getItem('sudoku.playStyle') || 'cell-first';
+
     for (const btn of pad.children) {
       const n = +btn.dataset.n;
       const remaining = left[n];
@@ -206,8 +231,13 @@ const Game = (() => {
       const exhausted = remaining <= 0;
       btn.disabled = exhausted && !S.penMode; // still selectable for notes cleanup? no — fully disable
       if (exhausted) btn.disabled = true;
-      btn.classList.toggle('active', S.activeDigit === n && !exhausted);
-      if (exhausted && S.activeDigit === n) S.activeDigit = 0;
+      
+      if (style === 'cell-first') {
+        btn.classList.remove('active');
+      } else {
+        btn.classList.toggle('active', S.activeDigit === n && !exhausted);
+        if (exhausted && S.activeDigit === n) S.activeDigit = 0;
+      }
     }
   }
 
@@ -310,44 +340,58 @@ const Game = (() => {
     if (S.paused || S.over) return;
     GameAudio.unlock();
     const cellFilled = S.board[i] !== 0;
+    const style = localStorage.getItem('sudoku.playStyle') || 'cell-first';
 
-    if (cellFilled) {
-      // select the cell + adopt its digit for highlighting
-      S.selectedCell = i;
-      setActiveDigit(S.board[i], false);
-      GameAudio.play('select');
-      refreshCells(); refreshNumpad();
-      emit('cursor', { i });
-      return;
-    }
-
-    // empty cell
-    S.selectedCell = i;
-    emit('cursor', { i });
-    if (S.activeDigit) {
-      if (S.penMode) toggleNote(i, S.activeDigit, true);
-      else placeNumber(i, S.activeDigit, true);
-    } else {
-      GameAudio.play('select');
+    if (style === 'cell-first') {
+      S.activeDigit = 0;
+      if (S.selectedCell === i) {
+        S.selectedCell = -1; // deselect
+        GameAudio.play('select');
+      } else {
+        S.selectedCell = i;
+        GameAudio.play('select');
+        emit('cursor', { i });
+      }
       refreshCells();
+      refreshNumpad();
+    } else {
+      S.selectedCell = -1;
+      if (S.activeDigit > 0 && !cellFilled) {
+        if (S.penMode) toggleNote(i, S.activeDigit, true);
+        else placeNumber(i, S.activeDigit, true);
+      } else {
+        if (cellFilled) {
+          setActiveDigit(S.board[i], false);
+          GameAudio.play('select');
+          refreshCells();
+        } else {
+          GameAudio.play('select');
+        }
+      }
     }
   }
 
   function onNumTap(n) {
     if (S.paused || S.over) return;
     GameAudio.unlock();
-    // if a digit is already active and an empty cell is selected → place there
-    if (S.selectedCell >= 0 && S.board[S.selectedCell] === 0) {
-      setActiveDigit(n, false);
-      if (S.penMode) toggleNote(S.selectedCell, n, true);
-      else placeNumber(S.selectedCell, n, true);
-      return;
+    const style = localStorage.getItem('sudoku.playStyle') || 'cell-first';
+
+    if (style === 'cell-first') {
+      if (S.selectedCell >= 0 && S.board[S.selectedCell] === 0) {
+        if (S.penMode) toggleNote(S.selectedCell, n, true);
+        else placeNumber(S.selectedCell, n, true);
+      }
+    } else {
+      S.selectedCell = -1;
+      if (S.activeDigit === n) {
+        setActiveDigit(0, true);
+      } else {
+        setActiveDigit(n, true);
+      }
+      GameAudio.play('select');
+      refreshCells();
+      refreshNumpad();
     }
-    // otherwise toggle number-first selection
-    setActiveDigit(S.activeDigit === n ? 0 : n, true);
-    GameAudio.play('select');
-    refreshCells();
-    refreshNumpad();
   }
 
   function setActiveDigit(n, exclusive) {
@@ -682,7 +726,16 @@ const Game = (() => {
     if (S.over) return;
     if (e.key >= '1' && e.key <= '9') onNumTap(+e.key);
     else if (e.key === 'n' || e.key === 'N') togglePen();
-    else if (e.key === 'Escape') { setActiveDigit(0, true); refreshCells(); }
+    else if (e.key === 'Escape') {
+      const style = localStorage.getItem('sudoku.playStyle') || 'cell-first';
+      if (style === 'cell-first') {
+        S.selectedCell = -1;
+      } else {
+        S.activeDigit = 0;
+      }
+      refreshCells();
+      refreshNumpad();
+    }
     else if (e.key === 'p' || e.key === 'P') setPaused(!S.paused);
     else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
       e.preventDefault();
@@ -692,6 +745,19 @@ const Game = (() => {
       if (e.key === 'ArrowLeft' && i % 9 > 0) i -= 1;
       if (e.key === 'ArrowRight' && i % 9 < 8) i += 1;
       S.selectedCell = i;
+      refreshCells();
+    }
+  });
+
+  // Clicking outside the board clears cell selection in Cell First mode
+  document.addEventListener('pointerdown', (e) => {
+    if (!document.getElementById('screen-game').classList.contains('active')) return;
+    if (S.over || S.paused) return;
+    const style = localStorage.getItem('sudoku.playStyle') || 'cell-first';
+    if (style !== 'cell-first') return;
+
+    if (!e.target.closest('#board') && !e.target.closest('#numpad') && !e.target.closest('#powers-row') && !e.target.closest('.game-top')) {
+      S.selectedCell = -1;
       refreshCells();
     }
   });

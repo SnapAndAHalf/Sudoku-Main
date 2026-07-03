@@ -672,3 +672,153 @@ body.shake { animation: body-shake .45s; }
 .legal-page a { color: var(--accent-deep); font-weight: 800; }
 .legal-updated { font-size: .8rem !important; text-transform: uppercase; letter-spacing: .05em; }
 .legal-back { display: inline-block; margin-bottom: 8px; font-size: .85rem; }
+
+/* ============================================================
+   SETTINGS & PLAY STYLE ONBOARDING (FTUE)
+   ============================================================ */
+.settings-section {
+  margin: 18px 0;
+  text-align: left;
+}
+.settings-section-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--accent-deep);
+  margin-bottom: 12px;
+  border-bottom: 2px dashed var(--line);
+  padding-bottom: 4px;
+}
+.settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+.settings-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  user-select: none;
+}
+.settings-option input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  cursor: pointer;
+  outline: none;
+  display: inline-grid;
+  place-items: center;
+  margin: 0;
+  background: var(--card);
+}
+.settings-option input[type="radio"]::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--teal);
+  transform: scale(0);
+  transition: transform .15s cubic-bezier(.2, 1.8, .4, 1);
+}
+.settings-option input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+.settings-option input[type="radio"]:checked {
+  border-color: var(--teal);
+}
+
+/* Onboarding (FTUE) Options */
+.onboard-cards {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 22px 0;
+}
+.onboard-card {
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 16px;
+  width: 210px;
+  cursor: pointer;
+  background: var(--card);
+  text-align: center;
+  box-shadow: 0 4px 0 rgba(38,34,26,.15);
+  transition: transform .15s, border-color .15s, background .15s, box-shadow .15s;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.onboard-card:hover {
+  transform: translateY(-2px);
+  background: #fffdf5;
+}
+.onboard-card.selected {
+  border-color: var(--teal);
+  background: #f0faf7;
+  box-shadow: 0 4px 0 var(--teal);
+  transform: translateY(2px);
+}
+.onboard-card-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+.onboard-card.selected .onboard-card-title {
+  color: var(--teal);
+}
+.onboard-card-desc {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  line-height: 1.35;
+  margin-bottom: 12px;
+}
+.onboard-card-illustration {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.onboard-card.selected .onboard-card-illustration {
+  border-color: var(--teal);
+}
+.onboard-card-illustration span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.onboard-card-illustration .arr {
+  color: var(--teal);
+  font-weight: 900;
+  font-size: 0.95rem;
+}
+
+/* Number-first hover previews */
+.board.num-first-active .cell:not(.given):not(.user):hover {
+  background: #cdeee6 !important;
+}
+.board.num-first-active .cell:not(.given):not(.user):empty:hover::before {
+  content: var(--hover-digit);
+  opacity: 0.45;
+  color: var(--teal);
+  font-weight: 900;
+}
+
