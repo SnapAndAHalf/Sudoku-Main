@@ -243,7 +243,7 @@ const Main = (() => {
   /* ---------- wiring ---------- */
   function init() {
     $('btn-daily').addEventListener('click', startDaily);
-    document.querySelectorAll('.diff-btn').forEach(b =>
+    document.querySelectorAll('.card-single .diff-btn').forEach(b =>
       b.addEventListener('click', () => startSingle(b.dataset.diff)));
     $('btn-create-room').addEventListener('click', createRoom);
     $('btn-join-room').addEventListener('click', () => joinRoomPrompt());
