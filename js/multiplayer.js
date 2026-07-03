@@ -254,6 +254,7 @@ const Multi = (() => {
 
     // actions
     $('btn-lobby-start').hidden = !isHost;
+    $('btn-lobby-start').disabled = isHost && players.length <= 1;
     $('lobby-hint').textContent = isHost
       ? (players.length === 1 ? 'Share the code or link — friends appear here when they join.' : 'Everyone\'s in? Hit Start!')
       : 'Waiting for the host to start the game…';
@@ -268,6 +269,12 @@ const Multi = (() => {
     lobby.difficulty = d;
     GameAudio.play('click');
     sendLobby();
+    
+    // Auto-start game if there are other players
+    const players = lobby.players.length ? lobby.players : [myName + ' ⭐'];
+    if (players.length > 1) {
+      startGame();
+    }
   }
 
   /* Host: launch the game for everyone. */
