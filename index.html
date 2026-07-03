@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Daily Sudoku — Free Online Sudoku with Daily Challenges, Powers & Multiplayer</title>
+  <meta name="description" content="Play free online sudoku with a twist: earn points, unlock powers, keep your daily streak alive, and solve puzzles together with friends in co-op multiplayer. New daily challenge every day — same puzzle for everyone worldwide.">
+  <meta name="keywords" content="sudoku, daily sudoku, online sudoku, free sudoku, sudoku with friends, multiplayer sudoku, sudoku daily challenge, sudoku streak, sudoku game">
+  <link rel="canonical" href="https://www.daily-sudoku.in/">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#f3ecdd">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.daily-sudoku.in/">
+  <meta property="og:title" content="Daily Sudoku — Sudoku with Powers, Streaks & Co-op Multiplayer">
+  <meta property="og:description" content="A fresh sudoku challenge every day, identical for everyone worldwide. Earn points, spend them on powers, protect your 3 hearts, and invite friends to solve together.">
+  <meta property="og:image" content="https://www.daily-sudoku.in/og-image.png">
+  <meta property="og:site_name" content="Daily Sudoku">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Daily Sudoku — Sudoku with Powers, Streaks & Co-op Multiplayer">
+  <meta name="twitter:description" content="A fresh sudoku challenge every day. Earn points, use powers, keep your streak, play with friends.">
+  <meta name="twitter:image" content="https://www.daily-sudoku.in/og-image.png">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="manifest" href="site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "Daily Sudoku",
+    "url": "https://www.daily-sudoku.in/",
+    "description": "Free online sudoku with daily challenges, a points-and-powers system, hearts, streaks, highscores and co-op multiplayer via invite link.",
+    "genre": ["Puzzle", "Logic", "Board Game"],
+    "gamePlatform": "Web Browser",
+    "applicationCategory": "Game",
+    "operatingSystem": "Any",
+    "playMode": ["SinglePlayer", "CoOp", "MultiPlayer"],
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "inLanguage": "en"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is the daily sudoku challenge the same for everyone?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. The daily challenge is generated from the calendar date, so every player in the world solves the exact same puzzle on the same day. Complete it every day to grow your streak." }
+      },
+      {
+        "@type": "Question",
+        "name": "How do powers work in Daily Sudoku?",
+        "acceptedAnswer": { "@type": "Answer", "text": "You earn points for correct placements, completed rows, columns and 3x3 boxes. Points can be spent on powers such as Reveal, Time Freeze, Guardian Shield, Auto Notes, Second Wind and Beacon. Each game randomly offers 3 powers from the pool of 6." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I play sudoku with friends?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Create a multiplayer room and share the invite link. Friends who open the link join your board instantly and you solve the same puzzle together in real time." }
+      },
+      {
+        "@type": "Question",
+        "name": "What happens when I make a mistake?",
+        "acceptedAnswer": { "@type": "Answer", "text": "You have 3 hearts. Placing a number in the wrong cell costs one heart. Lose all three and the game is over — unless you use the Guardian Shield or Second Wind power." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is Daily Sudoku free?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Completely free, no account needed. Your streaks, highscores and settings are saved in your browser." }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div class="bg-texture" aria-hidden="true"></div>
+  <div class="bg-digits" aria-hidden="true"></div>
+
+  <!-- ============ MAIN MENU ============ -->
+  <main id="screen-menu" class="screen active">
+    <header class="menu-header">
+      <h1 class="logo"><span class="logo-tile">D</span><span class="logo-tile alt">A</span><span class="logo-tile">I</span><span class="logo-tile alt">L</span><span class="logo-tile">Y</span>
+        <span class="logo-word">SUDOKU</span></h1>
+      <p class="tagline">One grid a day keeps the boredom away.</p>
+    </header>
+
+    <section class="menu-cards" aria-label="Game modes">
+      <!-- Daily challenge card -->
+      <button class="card card-daily" id="btn-daily">
+        <div class="card-daily-top">
+          <span class="card-kicker">Daily Challenge</span>
+          <span class="daily-date" id="daily-date">—</span>
+        </div>
+        <div class="card-daily-mid">
+          <span class="streak-flame" id="streak-flame">🔥</span>
+          <span class="streak-count"><b id="streak-count">0</b><small>day streak</small></span>
+        </div>
+        <div class="daily-status" id="daily-status">Not played yet — same puzzle for everyone today!</div>
+      </button>
+
+      <!-- Singleplayer -->
+      <div class="card card-single">
+        <span class="card-kicker">Singleplayer</span>
+        <div class="difficulty-row" role="group" aria-label="Choose difficulty">
+          <button class="diff-btn" data-diff="easy">Easy</button>
+          <button class="diff-btn" data-diff="medium">Medium</button>
+          <button class="diff-btn" data-diff="hard">Hard</button>
+          <button class="diff-btn" data-diff="expert">Expert</button>
+        </div>
+        <div class="highscore-line" id="highscore-line">Best: —</div>
+      </div>
+
+      <!-- Multiplayer -->
+      <div class="card card-multi">
+        <span class="card-kicker">Multiplayer Co-op</span>
+        <p class="card-note">Solve one board together. Share a link, race the clock as a team.</p>
+        <div class="multi-actions">
+          <button class="btn btn-primary" id="btn-create-room">Create Room</button>
+          <button class="btn btn-ghost" id="btn-join-room">Join with Code</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="menu-footer">
+      <button class="icon-toggle" id="toggle-sound" aria-label="Toggle sound effects" title="Sound effects">🔊</button>
+      <button class="icon-toggle" id="toggle-music" aria-label="Toggle music" title="Music">🎵</button>
+      <button class="icon-toggle" id="btn-how" aria-label="How to play" title="How to play">❓</button>
+    </footer>
+
+    <!-- SEO content -->
+    <section class="seo-content">
+      <h2>Free Online Sudoku, Reinvented</h2>
+      <p>Daily Sudoku is a free browser sudoku game that turns the classic logic puzzle into something you'll come back to every single day. Solve the <strong>daily challenge</strong> — the same puzzle for every player worldwide — to build your streak. Earn points for every correct move, completed row, column and 3×3 box, then spend them on <strong>powers</strong> like Time Freeze, Guardian Shield and Auto Notes. But be careful: you only get <strong>3 hearts</strong> per game.</p>
+      <h2>Play Sudoku With Friends</h2>
+      <p>Sudoku doesn't have to be a solo hobby. Create a <strong>multiplayer room</strong>, send the invite link, and solve the same grid together in real time — perfect for coffee breaks, long calls, or beating an Expert puzzle as a duo.</p>
+      <h2>How to Play Sudoku</h2>
+      <p>Fill the 9×9 grid so every row, every column and every 3×3 box contains the digits 1 through 9 exactly once. Use pen notes to mark candidates in tough spots, watch the remaining-count under each number, and let completed lines fuel your power meter.</p>
+    </section>
+  </main>
+
+  <!-- ============ GAME SCREEN ============ -->
+  <main id="screen-game" class="screen" aria-label="Sudoku game">
+    <div class="game-top">
+      <button class="btn-back" id="btn-back" aria-label="Back to menu">←</button>
+      <div class="hearts" id="hearts" aria-label="Hearts remaining">
+        <span class="heart">♥</span><span class="heart">♥</span><span class="heart">♥</span>
+      </div>
+      <div class="game-mode-label" id="game-mode-label">Medium</div>
+      <div class="timer-wrap">
+        <span class="timer" id="timer">00:00</span>
+        <button class="btn-pause" id="btn-pause" aria-label="Pause">⏸</button>
+      </div>
+    </div>
+
+    <div class="score-bar">
+      <div class="score-chip"><span class="score-label">Points</span><span class="score-value" id="score">0</span></div>
+      <div class="combo-chip" id="combo-chip">×<span id="combo">1</span> combo</div>
+      <div class="multi-presence" id="multi-presence" hidden></div>
+    </div>
+
+    <div class="board-wrap">
+      <div class="board" id="board" role="grid" aria-label="Sudoku board"></div>
+      <div class="board-overlay" id="board-overlay" hidden>
+        <div class="overlay-inner" id="overlay-inner"></div>
+      </div>
+    </div>
+
+    <div class="powers-row" id="powers-row" aria-label="Powers"></div>
+
+    <div class="controls">
+      <div class="tool-row">
+        <button class="tool-btn" id="btn-pen" aria-pressed="false" title="Pen / notes mode (N)">
+          <span class="tool-ico">✎</span><span class="tool-lbl">Pen</span>
+        </button>
+        <button class="tool-btn" id="btn-erase" title="Eraser (E)">
+          <span class="tool-ico">⌫</span><span class="tool-lbl">Erase</span>
+        </button>
+      </div>
+      <div class="numpad" id="numpad" aria-label="Number pad"></div>
+    </div>
+  </main>
+
+  <!-- ============ DIALOGS ============ -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal-card" id="modal-card" role="dialog" aria-modal="true"></div>
+  </div>
+
+  <div class="toast-layer" id="toast-layer" aria-live="polite"></div>
+  <canvas id="fx-canvas" aria-hidden="true"></canvas>
+
+  <script src="js/rng.js"></script>
+  <script src="js/sudoku.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/powers.js"></script>
+  <script src="js/daily.js"></script>
+  <script src="js/fx.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/multiplayer.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
