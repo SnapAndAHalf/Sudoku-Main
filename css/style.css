@@ -192,10 +192,15 @@ body {
    GAME SCREEN
    ============================================================ */
 #screen-game {
+  display: none;
   max-width: 560px; margin: 0 auto;
   padding: 14px 12px 40px;
-  display: flex; flex-direction: column; gap: 10px;
+  flex-direction: column; gap: 10px;
 }
+#screen-game.active {
+  display: flex;
+}
+
 
 .game-top { display: flex; align-items: center; gap: 10px; }
 .btn-back {
