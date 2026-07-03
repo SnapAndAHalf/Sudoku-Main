@@ -269,12 +269,6 @@ const Multi = (() => {
     lobby.difficulty = d;
     GameAudio.play('click');
     sendLobby();
-    
-    // Auto-start game if there are other players
-    const players = lobby.players.length ? lobby.players : [myName + ' ⭐'];
-    if (players.length > 1) {
-      startGame();
-    }
   }
 
   /* Host: launch the game for everyone. */
@@ -327,5 +321,6 @@ const Multi = (() => {
     get active() { return active; },
     get playerCount() { return conns.filter(c => c.open).length; },
     get myName() { return myName; },
+    get roomCode() { return roomCode; },
   };
 })();

@@ -96,6 +96,18 @@ const Game = (() => {
     $('btn-pen').setAttribute('aria-pressed', 'false');
     $('numpad').classList.remove('pen-mode');
     $('board-overlay').hidden = true;
+
+    // Show/hide and populate lobby code display
+    const lobbyEl = $('game-lobby-code');
+    if (lobbyEl) {
+      if (S.mode === 'multi' && typeof Multi !== 'undefined' && Multi.roomCode) {
+        lobbyEl.hidden = false;
+        const valEl = $('game-lobby-code-val');
+        if (valEl) valEl.textContent = Multi.roomCode;
+      } else {
+        lobbyEl.hidden = true;
+      }
+    }
   }
 
   function cap(s) { return s[0].toUpperCase() + s.slice(1); }
