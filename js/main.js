@@ -46,14 +46,17 @@ const Main = (() => {
   function cap(x) { return x[0].toUpperCase() + x.slice(1); }
 
   /* ---------- modal helpers ---------- */
-  function openModal(html) {
-    $('modal-card').innerHTML = html;
+  function openModal(html, opts = {}) {
+    const card = $('modal-card');
+    card.innerHTML = html;
+    // persistent modals (win / game over) can't be dismissed by clicking outside
+    card.dataset.persistent = opts.persistent ? '1' : '';
     $('modal').hidden = false;
   }
   function closeModal() { $('modal').hidden = true; }
 
   $('modal').addEventListener('click', (e) => {
-    if (e.target === $('modal')) closeModal();
+    if (e.target === $('modal') && $('modal-card').dataset.persistent !== '1') closeModal();
   });
 
   /* ---------- game starters ---------- */
@@ -78,43 +81,48 @@ const Main = (() => {
   }
 
   /* ---------- multiplayer ---------- */
+  function escAttr(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function savedNick() {
+    let n = localStorage.getItem('ds_name') || '';
+    if (!n && typeof Auth !== 'undefined' && Auth.user) n = Auth.user.email.split('@')[0];
+    return escAttr(n.slice(0, 14));
+  }
+
   async function createRoom() {
     GameAudio.unlock();
-    openModal(`<h2>Creating room…</h2><p>Contacting matchmaking server</p>`);
-    try {
-      const { link } = await Multi.createRoom();
-      openModal(`
-        <h2>Room Ready! 🎉</h2>
-        <p>Share this link with friends. The game starts for you now — friends join your board live.</p>
-        <div class="room-link-box" id="room-link" title="Click to copy">${link}</div>
-        <p style="font-size:.8rem" id="copy-hint">Click the link to copy it</p>
-        <div class="modal-actions">
-          <button class="btn btn-primary" id="btn-start-multi">Start Puzzle</button>
-        </div>`);
-      $('room-link').addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(link);
-          $('copy-hint').textContent = '✓ Copied to clipboard!';
-        } catch (_) { $('copy-hint').textContent = 'Copy it manually (Ctrl+C)'; }
-      });
-      $('btn-start-multi').addEventListener('click', () => {
-        closeModal();
-        show('screen-game');
-        Game.newGame({ seed: 'mp:' + Daily.todayKey() + ':' + Math.floor(Math.random() * 1e9), difficulty: 'medium', mode: 'multi' });
-        Multi.broadcastState(); // friends who joined the lobby early get the board now
-        Multi.updatePresence();
-      });
-    } catch (err) {
-      openModal(`<h2>Couldn't create room</h2><p>${err.message || err.type || 'Unknown error'}</p>
-        <div class="modal-actions"><button class="btn btn-ghost" onclick="Main.closeModal()">Close</button></div>`);
-    }
+    openModal(`
+      <h2>Host a Lobby</h2>
+      <p>Pick a nickname so friends know who's who.</p>
+      <input class="modal-input" id="nick-input" maxlength="14" placeholder="Your nickname" value="${savedNick()}">
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="btn-do-host">Create Lobby</button>
+        <button class="btn btn-ghost" onclick="Main.closeModal()">Cancel</button>
+      </div>`);
+    const doHost = async () => {
+      const name = ($('nick-input').value.trim() || 'Player').slice(0, 14);
+      localStorage.setItem('ds_name', name);
+      openModal(`<h2>Creating lobby…</h2><p>Contacting matchmaking server</p>`);
+      try {
+        await Multi.createRoom(name);
+        Multi.showLobby();
+      } catch (err) {
+        openModal(`<h2>Couldn't create lobby</h2><p>${err.message || err.type || 'Unknown error'}</p>
+          <div class="modal-actions"><button class="btn btn-ghost" onclick="Main.closeModal()">Close</button></div>`);
+      }
+    };
+    $('btn-do-host').addEventListener('click', doHost);
+    $('nick-input').addEventListener('keydown', e => { if (e.key === 'Enter') doHost(); });
+    $('nick-input').focus();
   }
 
   function joinRoomPrompt(prefill = '') {
     openModal(`
-      <h2>Join a Room</h2>
-      <p>Paste the invite link or room code your friend sent you.</p>
-      <input class="modal-input" id="room-code-input" placeholder="Invite link or room code" value="${prefill}">
+      <h2>Join a Lobby</h2>
+      <input class="modal-input" id="nick-input" maxlength="14" placeholder="Your nickname" value="${savedNick()}">
+      <input class="modal-input" id="room-code-input" placeholder="Room code or invite link" value="${escAttr(prefill)}">
       <div class="modal-actions">
         <button class="btn btn-primary" id="btn-do-join">Join</button>
         <button class="btn btn-ghost" onclick="Main.closeModal()">Cancel</button>
@@ -124,20 +132,22 @@ const Main = (() => {
       if (!raw) return;
       let code = raw;
       try { const u = new URL(raw); code = u.searchParams.get('room') || raw; } catch (_) {}
-      joinRoom(code);
+      const name = ($('nick-input').value.trim() || 'Player').slice(0, 14);
+      localStorage.setItem('ds_name', name);
+      joinRoom(code.toUpperCase(), name);
     };
     $('btn-do-join').addEventListener('click', doJoin);
     $('room-code-input').addEventListener('keydown', e => { if (e.key === 'Enter') doJoin(); });
-    $('room-code-input').focus();
+    $('nick-input').focus();
   }
 
-  async function joinRoom(code) {
+  async function joinRoom(code, name) {
     GameAudio.unlock();
-    openModal(`<h2>Joining room…</h2><p>Connecting to your friend's board</p>`);
+    openModal(`<h2>Joining lobby…</h2><p>Connecting to your friend's room</p>`);
     try {
-      await Multi.joinRoom(code);
-      openModal(`<h2>Connected! 🎉</h2><p>Waiting for the host's board…</p>`);
-      // Game starts when the host's state arrives (enterMultiplayerGame)
+      await Multi.joinRoom(code, name);
+      openModal(`<h2>Connected! 🎉</h2><p>Entering the lobby…</p>`);
+      // lobby snapshot from the host moves us onto the lobby screen
     } catch (err) {
       openModal(`<h2>Couldn't join</h2><p>${err.message || err.type || 'Room not found — ask for a fresh link.'}</p>
         <div class="modal-actions"><button class="btn btn-ghost" onclick="Main.closeModal()">Close</button></div>`);
@@ -155,7 +165,7 @@ const Main = (() => {
   }
 
   /* ---------- end screens ---------- */
-  function showWin({ base, timeBonus, heartBonus, diffBonus, final, time, hearts, mode, difficulty }) {
+  function showWin({ base, timeBonus, heartBonus, diffBonus, final, time, hearts, mode, difficulty, daily }) {
     const mm = String(Math.floor(time / 60)).padStart(2, '0');
     const ss = String(time % 60).padStart(2, '0');
 
@@ -164,10 +174,11 @@ const Main = (() => {
       if (saveScore(difficulty, final)) recordLine = `<p class="new-record">★ NEW HIGHSCORE! ★</p>`;
     }
     let streakLine = '';
-    if (mode === 'daily') {
+    // daily streak credit: solo daily OR the daily played co-op in multiplayer
+    if (mode === 'daily' || daily) {
       const wasDone = Daily.isDoneToday();
       const streak = Daily.markDone(final);
-      if (!wasDone) streakLine = `<p class="new-record">🔥 ${streak}-day streak!</p>`;
+      if (!wasDone) streakLine = `<p class="new-record">🔥 ${streak}-day streak${mode === 'multi' ? ' — teamwork counts!' : '!'}</p>`;
     }
 
     openModal(`
@@ -182,9 +193,11 @@ const Main = (() => {
       </div>
       <div class="modal-actions">
         ${mode === 'single' ? `<button class="btn btn-primary" onclick="Main.closeModal(); Main.startSingle('${difficulty}')">Play Again</button>` : ''}
+        ${mode === 'multi' ? `<button class="btn btn-primary" onclick="Main.closeModal(); Multi.backToLobby()">Back to Lobby</button>` : ''}
         <button class="btn btn-ghost" onclick="Main.closeModal(); Main.backToMenu()">Menu</button>
-      </div>`);
+      </div>`, { persistent: true });
     renderMenuStats();
+    if (typeof Auth !== 'undefined') Auth.pushSync(); // cloud save for logged-in players
   }
 
   function showGameOver({ score, time, mode, difficulty, seed }) {
@@ -192,14 +205,14 @@ const Main = (() => {
       ? `<button class="btn btn-primary" onclick="Main.closeModal(); Main.startDaily()">Try Again</button>`
       : mode === 'single'
         ? `<button class="btn btn-primary" onclick="Main.closeModal(); Main.startSingle('${difficulty}')">New Game</button>`
-        : '';
+        : `<button class="btn btn-primary" onclick="Main.closeModal(); Multi.backToLobby()">Back to Lobby</button>`;
     openModal(`
       <h2 class="lose">OUT OF HEARTS 💔</h2>
       <p>The grid got the better of you this time. You banked <b>${score}</b> points before falling.</p>
       <div class="modal-actions">
         ${retry}
         <button class="btn btn-ghost" onclick="Main.closeModal(); Main.backToMenu()">Menu</button>
-      </div>`);
+      </div>`, { persistent: true });
   }
 
   function backToMenu() {
@@ -235,6 +248,23 @@ const Main = (() => {
     $('btn-create-room').addEventListener('click', createRoom);
     $('btn-join-room').addEventListener('click', () => joinRoomPrompt());
     $('btn-how').addEventListener('click', showHow);
+
+    // lobby controls
+    document.querySelectorAll('#lobby-diff-row .diff-btn').forEach(b =>
+      b.addEventListener('click', () => Multi.setDifficulty(b.dataset.diff)));
+    $('btn-lobby-start').addEventListener('click', () => Multi.startGame());
+    $('btn-lobby-leave').addEventListener('click', () => {
+      GameAudio.play('click');
+      backToMenu();
+    });
+    $('btn-copy-code').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText($('lobby-code').textContent); $('lobby-copy-hint').textContent = '✓ Code copied!'; }
+      catch (_) { $('lobby-copy-hint').textContent = 'Copy the code manually.'; }
+    });
+    $('btn-copy-link').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(Multi.inviteLink()); $('lobby-copy-hint').textContent = '✓ Invite link copied!'; }
+      catch (_) { $('lobby-copy-hint').textContent = 'Copy the link manually: ' + Multi.inviteLink(); }
+    });
 
     $('btn-back').addEventListener('click', () => {
       GameAudio.play('click');
@@ -278,7 +308,8 @@ const Main = (() => {
   document.addEventListener('DOMContentLoaded', init);
 
   return {
-    startSingle, startDaily, backToMenu, closeModal,
-    showWin, showGameOver, enterMultiplayerGame,
+    startSingle, startDaily, backToMenu, openModal, closeModal,
+    showWin, showGameOver, enterMultiplayerGame, renderMenuStats,
+    showScreen: show,
   };
 })();

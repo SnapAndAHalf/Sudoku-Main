@@ -76,7 +76,7 @@
       {
         "@type": "Question",
         "name": "Is Daily Sudoku free?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Completely free, no account needed. Your streaks, highscores and settings are saved in your browser." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Completely free, no account needed. Your streaks, highscores and settings are saved in your browser — or create a free optional account to sync them across devices." }
       }
     ]
   }
@@ -88,6 +88,7 @@
 
   <!-- ============ MAIN MENU ============ -->
   <main id="screen-menu" class="screen active">
+    <button class="icon-toggle btn-account" id="btn-account" aria-label="Account" title="Log in / Sign up">👤</button>
     <header class="menu-header">
       <h1 class="logo"><span class="logo-tile">D</span><span class="logo-tile alt">A</span><span class="logo-tile">I</span><span class="logo-tile alt">L</span><span class="logo-tile">Y</span>
         <span class="logo-word">SUDOKU</span></h1>
@@ -146,6 +147,54 @@
       <h2>How to Play Sudoku</h2>
       <p>Fill the 9×9 grid so every row, every column and every 3×3 box contains the digits 1 through 9 exactly once. Use pen notes to mark candidates in tough spots, watch the remaining-count under each number, and let completed lines fuel your power meter.</p>
     </section>
+
+    <nav class="legal-links" aria-label="Legal">
+      <a href="privacy-policy.html">Privacy Policy</a> · <a href="terms.html">Terms &amp; Conditions</a>
+    </nav>
+  </main>
+
+  <!-- ============ MULTIPLAYER LOBBY ============ -->
+  <main id="screen-lobby" class="screen" aria-label="Multiplayer lobby">
+    <div class="lobby-card">
+      <span class="card-kicker">Multiplayer Co-op</span>
+      <h2 class="lobby-title">Lobby</h2>
+
+      <div class="lobby-code-box">
+        <div class="lobby-code-label">Room code</div>
+        <div class="lobby-code" id="lobby-code">—</div>
+        <div class="lobby-code-actions">
+          <button class="btn btn-ghost btn-sm" id="btn-copy-code">Copy code</button>
+          <button class="btn btn-primary btn-sm" id="btn-copy-link">Copy invite link</button>
+        </div>
+        <p class="lobby-copy-hint" id="lobby-copy-hint">Friends can join with the code or by opening the link.</p>
+      </div>
+
+      <div class="lobby-section">
+        <div class="lobby-section-head">
+          <span class="card-kicker">Players</span>
+          <span class="lobby-count" id="lobby-count">1 player</span>
+        </div>
+        <ul class="lobby-players" id="lobby-players"></ul>
+      </div>
+
+      <div class="lobby-section">
+        <span class="card-kicker">Difficulty</span>
+        <div class="difficulty-row" id="lobby-diff-row" role="group" aria-label="Choose difficulty">
+          <button class="diff-btn" data-diff="easy">Easy</button>
+          <button class="diff-btn" data-diff="medium">Medium</button>
+          <button class="diff-btn" data-diff="hard">Hard</button>
+          <button class="diff-btn" data-diff="expert">Expert</button>
+          <button class="diff-btn diff-daily" data-diff="daily">🔥 Daily</button>
+        </div>
+        <p class="lobby-diff-note" id="lobby-diff-note"></p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="btn-lobby-start">Start Game</button>
+        <button class="btn btn-ghost" id="btn-lobby-leave">Leave Lobby</button>
+      </div>
+      <p class="lobby-hint" id="lobby-hint"></p>
+    </div>
   </main>
 
   <!-- ============ GAME SCREEN ============ -->
@@ -207,5 +256,6 @@
   <script src="js/game.js"></script>
   <script src="js/multiplayer.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/auth.js"></script>
 </body>
 </html>

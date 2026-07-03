@@ -31,13 +31,13 @@ const Game = (() => {
   const boardEl = () => $('board');
 
   /* ---------- setup ---------- */
-  function newGame({ seed, difficulty, mode }) {
+  function newGame({ seed, difficulty, mode, daily = false }) {
     const gen = Sudoku.generate(seed, difficulty);
     Object.assign(S, {
       puzzle: gen.puzzle.slice(), solution: gen.solution, board: gen.puzzle.slice(),
       notes: Array.from({ length: 81 }, () => new Set()),
       given: gen.puzzle.map(v => v !== 0),
-      mode, difficulty, seed,
+      mode, difficulty, seed, daily: daily || mode === 'daily',
       hearts: MAX_HEARTS, score: 0, combo: 0,
       activeDigit: 0, selectedCell: -1,
       penMode: false, eraseMode: false,
@@ -58,7 +58,7 @@ const Game = (() => {
       puzzle: st.puzzle.slice(), solution: st.solution.slice(), board: st.board.slice(),
       notes: st.notes.map(a => new Set(a)),
       given: st.puzzle.map(v => v !== 0),
-      mode: 'multi', difficulty: st.difficulty, seed: st.seed,
+      mode: 'multi', difficulty: st.difficulty, seed: st.seed, daily: !!st.daily,
       hearts: st.hearts, score: st.score, combo: 0,
       activeDigit: 0, selectedCell: -1,
       penMode: false, eraseMode: false,
@@ -76,7 +76,7 @@ const Game = (() => {
     return {
       puzzle: S.puzzle, solution: S.solution, board: S.board,
       notes: S.notes.map(s => [...s]),
-      difficulty: S.difficulty, seed: S.seed,
+      difficulty: S.difficulty, seed: S.seed, daily: S.daily,
       hearts: S.hearts, score: S.score, timer: S.timer,
       shield: S.shield, powersUsed: S.powersUsed,
     };
@@ -92,7 +92,7 @@ const Game = (() => {
     renderTimer();
     $('game-mode-label').textContent =
       S.mode === 'daily' ? `Daily · ${cap(S.difficulty)}` :
-      S.mode === 'multi' ? `Co-op · ${cap(S.difficulty)}` : cap(S.difficulty);
+      S.mode === 'multi' ? (S.daily ? `Co-op Daily · ${cap(S.difficulty)}` : `Co-op · ${cap(S.difficulty)}`) : cap(S.difficulty);
     $('btn-pen').setAttribute('aria-pressed', 'false');
     $('numpad').classList.remove('pen-mode');
     $('board-overlay').hidden = true;
@@ -206,7 +206,7 @@ const Game = (() => {
       const btn = document.createElement('button');
       btn.className = 'power-btn';
       btn.dataset.pid = p.id;
-      btn.title = p.desc;
+      btn.dataset.desc = p.desc; // shown as a styled tooltip on hover/focus
       btn.innerHTML = `<span class="p-ico">${p.icon}</span><span class="p-name">${p.name}</span><span class="p-cost">★ ${p.cost}</span>`;
       btn.addEventListener('click', () => usePower(p.id));
       row.appendChild(btn);
@@ -390,6 +390,7 @@ const Game = (() => {
           refreshPowers();
           emit('shield', {});
         } else {
+          emit('mistake', {}); // partners get a (witty) heads-up about who slipped
           loseHeart(true);
         }
       }
@@ -532,7 +533,7 @@ const Game = (() => {
         base: S.score, timeBonus, heartBonus, diffBonus,
         final: S.score + timeBonus + heartBonus + diffBonus,
         time: S.timer, hearts: S.hearts,
-        mode: S.mode, difficulty: S.difficulty,
+        mode: S.mode, difficulty: S.difficulty, daily: S.daily,
       });
     }, 1600);
   }
@@ -635,10 +636,17 @@ const Game = (() => {
         break;
       }
       case 'score': S.score = payload.score; renderScore(); break;
-      case 'shield': S.shield = false; refreshPowers(); FX.toast('🛡️ Partner\'s shield absorbed a mistake!'); break;
+      case 'mistake':
+        FX.toast(Multi.quipMistake(payload.from || 'Someone'), 'event');
+        break;
+      case 'shield': {
+        S.shield = false; refreshPowers();
+        FX.toast(`🛡️ ${payload.from || 'A partner'}'s shield ate a mistake!`);
+        break;
+      }
       case 'power': {
         const p = S.powers.find(x => x.id === payload.id);
-        if (p) FX.toast(`Partner used ${p.icon} ${p.name}`);
+        if (p) FX.toast(Multi.quipPower(payload.from || 'Partner', p.name, p.icon), 'event');
         if (payload.id === 'shield') { S.shield = true; refreshPowers(); }
         if (payload.id === 'freeze') { S.frozen += 45; $('timer').classList.add('frozen'); }
         if (payload.id === 'autonotes') {
