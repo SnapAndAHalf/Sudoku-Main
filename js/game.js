@@ -50,6 +50,7 @@ const Game = (() => {
     renderAll();
     startTimer();
     GameAudio.startMusic();
+    if (typeof Track !== 'undefined') Track.gameStarted(S.mode, S.difficulty);
   }
 
   /* Load a state received from a multiplayer host. */
@@ -70,6 +71,7 @@ const Game = (() => {
     renderAll();
     startTimer();
     GameAudio.startMusic();
+    if (typeof Track !== 'undefined') Track.gameStarted(S.mode, S.difficulty);
   }
 
   function snapshot() {
@@ -560,6 +562,7 @@ const Game = (() => {
   function gameOver(local) {
     S.over = true;
     stopTimer();
+    if (typeof Track !== 'undefined') Track.gameEnded(false, S.timer);
     GameAudio.play('lose');
     if (local) emit('lose', {});
     setTimeout(() => Main.showGameOver({ score: S.score, time: S.timer, mode: S.mode, difficulty: S.difficulty, seed: S.seed }), 800);
@@ -571,6 +574,7 @@ const Game = (() => {
     if (S.board.some(v => v === 0)) return;
     S.over = true;
     stopTimer();
+    if (typeof Track !== 'undefined') Track.gameEnded(true, S.timer);
 
     GameAudio.play('win');
     FX.confettiRain();

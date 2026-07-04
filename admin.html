@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Daily Sudoku</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="legal-body">
+  <div class="bg-texture" aria-hidden="true"></div>
+
+  <main class="admin-wrap">
+    <header class="admin-header">
+      <h1>📊 Admin Dashboard</h1>
+      <div class="admin-header-actions">
+        <a class="btn btn-ghost btn-sm" href="index.html">← Game</a>
+        <button class="btn btn-ghost btn-sm" id="btn-refresh" hidden>Refresh</button>
+        <button class="btn btn-ghost btn-sm" id="btn-admin-logout" hidden>Log out</button>
+      </div>
+    </header>
+
+    <!-- states -->
+    <section id="admin-loading" class="admin-panel">Checking access…</section>
+
+    <section id="admin-login" class="admin-panel" hidden>
+      <h2>Log in</h2>
+      <p>This area is for administrators only.</p>
+      <input class="modal-input" id="adm-email" type="email" placeholder="Email" autocomplete="email">
+      <input class="modal-input" id="adm-pass" type="password" placeholder="Password" autocomplete="current-password">
+      <p class="auth-error" id="adm-error" hidden></p>
+      <button class="btn btn-primary" id="adm-login-btn">Log In</button>
+    </section>
+
+    <section id="admin-denied" class="admin-panel" hidden>
+      <h2>Access denied 🚫</h2>
+      <p>This account doesn't have admin privileges.</p>
+    </section>
+
+    <!-- dashboard -->
+    <div id="admin-dash" hidden>
+      <section class="stat-grid" id="stat-grid"></section>
+
+      <section class="admin-panel">
+        <div class="admin-panel-head">
+          <h2>Sessions played</h2>
+          <div class="period-tabs" id="period-tabs">
+            <button class="period-tab active" data-period="daily">Daily</button>
+            <button class="period-tab" data-period="weekly">Weekly</button>
+            <button class="period-tab" data-period="monthly">Monthly</button>
+            <button class="period-tab" data-period="yearly">Yearly</button>
+          </div>
+        </div>
+        <div class="chart" id="chart">Loading…</div>
+        <p class="chart-note" id="chart-note"></p>
+      </section>
+
+      <section class="admin-panel">
+        <h2>Breakdown</h2>
+        <div class="breakdown-grid">
+          <div>
+            <h3>By mode</h3>
+            <ul class="bd-list" id="bd-mode"></ul>
+          </div>
+          <div>
+            <h3>By difficulty</h3>
+            <ul class="bd-list" id="bd-diff"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-panel">
+        <div class="admin-panel-head">
+          <h2>Feedback <span class="fb-badge" id="fb-badge" hidden></span></h2>
+          <div class="period-tabs">
+            <button class="period-tab active" id="fb-filter-all">All</button>
+            <button class="period-tab" id="fb-filter-new">New only</button>
+          </div>
+        </div>
+        <div id="feedback-list">Loading…</div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

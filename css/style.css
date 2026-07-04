@@ -675,6 +675,81 @@ body.shake { animation: body-shake .45s; }
 .legal-back { display: inline-block; margin-bottom: 8px; font-size: .85rem; }
 
 /* ============================================================
+   FEEDBACK
+   ============================================================ */
+.feedback-text { text-align: left; resize: vertical; min-height: 110px; font-weight: 600; }
+
+/* ============================================================
+   ADMIN DASHBOARD
+   ============================================================ */
+.admin-wrap { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
+.admin-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.admin-header h1 { font-family: var(--font-display); font-size: 1.4rem; color: var(--accent-deep); }
+.admin-header-actions { display: flex; gap: 8px; }
+.btn-xs { padding: 4px 10px; font-size: .72rem; }
+
+.admin-panel {
+  background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px;
+}
+.admin-panel h2 { font-family: var(--font-display); font-size: 1rem; margin-bottom: 10px; }
+.admin-panel h3 { font-size: .82rem; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); margin-bottom: 8px; }
+.admin-panel p { color: var(--ink-soft); font-weight: 600; margin-bottom: 10px; }
+.admin-panel-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.admin-panel-head h2 { margin-bottom: 0; }
+#admin-login .modal-input { text-align: left; }
+
+/* stat cards */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card {
+  background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 16px; position: relative;
+}
+.stat-ico { font-size: 1.3rem; }
+.stat-big { font-family: var(--font-display); font-size: 1.7rem; color: var(--accent-deep); margin: 2px 0; }
+.stat-label { font-weight: 900; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+.stat-sub { font-weight: 600; font-size: .74rem; color: var(--ink-soft); margin-top: 4px; line-height: 1.4; }
+
+/* period tabs */
+.period-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.period-tab {
+  font-family: var(--font-body); font-weight: 800; font-size: .78rem;
+  padding: 7px 14px; cursor: pointer; border: 2px solid var(--ink); border-radius: 999px;
+  background: var(--paper); color: var(--ink);
+}
+.period-tab.active { background: var(--accent); color: #fff; }
+
+/* chart */
+.chart { min-height: 180px; font-weight: 700; color: var(--ink-soft); }
+.chart-bars { display: flex; align-items: stretch; gap: 4px; height: 200px; overflow-x: auto; padding-bottom: 4px; }
+.chart-col { flex: 1 1 0; min-width: 22px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; }
+.chart-count { font-size: .62rem; font-weight: 800; color: var(--ink-soft); }
+.chart-bar { width: 100%; max-width: 40px; background: var(--accent); border: 2px solid var(--ink); border-bottom-width: 3px; border-radius: 6px 6px 0 0; }
+.chart-label { font-size: .58rem; font-weight: 800; color: var(--ink-soft); white-space: nowrap; }
+.chart-note { font-size: .76rem; font-weight: 600; color: var(--ink-soft); margin-top: 10px; }
+
+/* breakdowns */
+.breakdown-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 560px) { .breakdown-grid { grid-template-columns: 1fr; } }
+.bd-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.bd-list li { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: .85rem; }
+.bd-name { flex: 0 0 110px; }
+.bd-bar { flex: 1; height: 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.bd-bar span { display: block; height: 100%; background: var(--teal); border-radius: 999px; }
+.bd-num { flex: 0 0 auto; font-weight: 900; color: var(--ink-soft); }
+
+/* feedback inbox */
+.fb-badge { background: var(--accent); color: #fff; font-size: .68rem; font-weight: 900; border-radius: 999px; padding: 2px 9px; vertical-align: middle; margin-left: 6px; font-family: var(--font-body); }
+.fb-item { border: 2px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--paper); }
+.fb-item.is-new { border-color: var(--accent); background: #fff8ef; }
+.fb-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .74rem; font-weight: 800; color: var(--ink-soft); margin-bottom: 6px; }
+.fb-meta .fb-toggle { margin-left: auto; }
+.fb-who { color: var(--teal); }
+.fb-page { background: var(--paper-deep); border-radius: 6px; padding: 1px 7px; }
+.fb-msg { font-weight: 600; line-height: 1.55; font-size: .92rem; white-space: pre-wrap; margin: 0; color: var(--ink); }
+.fb-empty { font-weight: 700; color: var(--ink-soft); }
+
+/* ============================================================
    SETTINGS & PLAY STYLE ONBOARDING (FTUE)
    ============================================================ */
 .settings-section {

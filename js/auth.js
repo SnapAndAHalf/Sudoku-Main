@@ -193,12 +193,20 @@ const Auth = (() => {
       <h2>Your Account</h2>
       <p><b>${user.email}</b><br>Streaks &amp; highscores sync automatically on this account.</p>
       <div class="modal-actions" style="flex-direction:column">
+        <span id="acc-admin-slot"></span>
         <button class="btn btn-ghost" id="acc-logout" style="width:100%">Log Out</button>
         <button class="btn btn-danger" id="acc-delete" style="width:100%">Delete Account &amp; Data</button>
       </div>
       <p class="auth-fineprint">Deleting your account permanently erases your email, consent record and synced
       game data from our servers (your right to erasure under India's DPDP Act). Questions or requests:
       <a href="privacy-policy.html" target="_blank">Privacy Policy</a>.</p>`);
+    // admins get a link to the dashboard
+    sb.rpc('is_admin').then(({ data }) => {
+      const slot = $('acc-admin-slot');
+      if (data === true && slot) {
+        slot.outerHTML = `<a class="btn btn-primary" href="admin.html" style="width:100%">📊 Admin Dashboard</a>`;
+      }
+    }).catch(() => {});
     $('acc-logout').addEventListener('click', async () => {
       await sb.auth.signOut();
       Main.closeModal();
@@ -307,5 +315,9 @@ const Auth = (() => {
     init();
   });
 
-  return { showAuthModal, showAccountModal, pushSync, get user() { return user; } };
+  return {
+    showAuthModal, showAccountModal, pushSync,
+    get user() { return user; },
+    get client() { return sb; },
+  };
 })();
